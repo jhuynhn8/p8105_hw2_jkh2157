@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(tidyverse)
 library(knitr)
+library(readxl)
 ```
 
 ## Problem 1
@@ -79,4 +80,23 @@ final_df=left_join(final_df,unemployment_df,by=c("year","month"))
 knitr::kable(head(final_df,15))
 ```
 
-The pols data set contains the monthly counts of Democratic and Republican governors,senators, and representatives. The snp data set looks at the monthly closing values of the S&P index, starting in 1950 which explains why there are some NA values. The unemployment data set reports monthly US unemployment rates starting in 1948. After cleaning and merging these data sets we get a new frame that ranges from Jan 1947 to Jun 2015, with variables including year, month, president, congressional bodies, stock market performance (close), and unemployment rates. The dimensions of the final table contains 822 rows and 11 columns.
+The pols data set (822 rows and 9 columns) contains the monthly counts of Democratic and Republican governors,senators, and representatives. The snp data set (787 rows and 3 columns) looks at the monthly closing values of the S&P index, starting in 1950 which explains why there are some NA values. The unemployment data set (816 rows and 3 columns) reports monthly US unemployment rates starting in 1948. After cleaning and merging these data sets we get a new frame that ranges from Jan 1947 to Jun 2015, with variables including year, month, president, congressional bodies, stock market performance (close), and unemployment rates. The dimensions of the final table contains 822 rows and 11 columns.
+
+## Problem 2 
+
+Step 2a: Cleaning up mrTrash
+
+```{r}
+mr_trash_df=
+  read_excel("datasets/trash_wheel_data.xlsx", sheet="Mr. Trash Wheel", range = "A2:N655") %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(dumpster)) %>% 
+mutate(
+  sports_balls=as.integer(round(sports_balls)),
+  identity = "mr",
+  year=as.numeric(year)
+)
+knitr::kable(head(mr_trash_df,10))
+```
+
+
