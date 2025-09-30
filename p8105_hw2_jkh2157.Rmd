@@ -57,18 +57,26 @@ knitr::kable(head(snp_df,10))
 Step 1c: tidy unemploymeny data 
 
 ```{r}
-unemployement_df=
+unemployment_df=
   read_csv("datasets/fivethirtyeight_datasets/unemployment.csv") %>% 
   janitor::clean_names() %>% 
   pivot_longer(
-    col=jan:dec,
+    cols=jan:dec,
     names_to="month",
     values_to="unemployment") %>% 
   mutate(
     month=str_to_title(month),
     year=as.character(year)) %>% 
   select(year,month,unemployment)
-knitr::kable(head(unemployement_df,10))
+knitr::kable(head(unemployment_df,10))
 ```
 
+Step 1d: merge data sets 
 
+```{r}
+final_df=left_join(pols_df,snp_df,by=c("year","month"))
+final_df=left_join(final_df,unemployment_df,by=c("year","month"))
+knitr::kable(head(final_df,15))
+```
+
+The pols data set contains the monthly counts of Democratic and Republican governors,senators, and representatives. The snp data set looks at the monthly closing values of the S&P index, starting in 1950 which explains why there are some NA values. The unemployment data set reports monthly US unemployment rates starting in 1948. After cleaning and merging these data sets we get a new frame that ranges from Jan 1947 to Jun 2015, with variables including year, month, president, congressional bodies, stock market performance (close), and unemployment rates. The dimensions of the final table contains 822 rows and 11 columns.
