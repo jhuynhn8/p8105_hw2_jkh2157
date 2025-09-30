@@ -88,7 +88,7 @@ Step 2a: Cleaning up mrTrash
 
 ```{r}
 mr_trash_df=
-  read_excel("datasets/trash_wheel_data.xlsx", sheet="Mr. Trash Wheel", range = "A2:N655") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Mr. Trash Wheel", range = "A2:N655") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
 mutate(
@@ -103,7 +103,7 @@ Step 2b: Cleaning up Professor Trash
 
 ```{r}
 prof_trash_df=
-  read_excel("datasets/trash_wheel_data.xlsx", sheet="Professor Trash Wheel", range="A2:M123") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Professor Trash Wheel", range="A2:M123") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
   mutate(
@@ -117,11 +117,11 @@ Step 2c: Cleaning up Gwynnda data
 
 ```{r}
 gwyn_trash_df=
-  read_excel("datasets/trash_wheel_data.xlsx", sheet="Gwynnda Trash Wheel", range = "A2:L266") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Gwynns Falls Trash Wheel", range = "A2:L266") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
   mutate(
-    identity="gwynnda",
+    identity="gwynn",
     year=as.numeric(year)
   )
 knitr::kable(head(gwyn_trash_df,10))
@@ -142,7 +142,7 @@ total_cigs_gwyn = gwyn_trash_df %>%
   summarise(total_cigs = sum(cigarette_butts, na.rm = TRUE))
 ```
 
-The combined Trash Wheel dataset contains **`r nrow(trash_wheels)`** observations and **`r ncol(trash_wheels)`** variables. Some key variables included the weight of trash collected, cigarette butts collected, plastic bottles, and identifier for which trash wheel the data came from. Professor Trash Wheel collected a total of **`r total_weight_prof$total_weight`** tons of trash. In June 2022, Gwynnda collected **`r total_cigs_gwyn$total_cigs`** cigarette butts.
+The combined Trash Wheel dataset contains **`r nrow(trash_wheels)`** observations and **`r ncol(trash_wheels)`** variables. Some key variables included the weight of trash collected, cigarette butts collected, plastic bottles, and identifier for which trash wheel the data came from. Professor Trash Wheel collected a total of **`r total_weight_prof$total_weight`** tons of trash. In June 2022, Gwyn collected **`r total_cigs_gwyn$total_cigs`** cigarette butts.
 
 ## Problem 3 
 
@@ -181,6 +181,29 @@ final_zillow_df= left_join(zori_df,zip_df,by="zip_code",relationship="many-to-ma
   select(-state_name,-region_type,-file_date) %>% 
   relocate(zip_code,neighborhood,county_name,city,state,metro,date,rent_price)
 knitr::kable(head(final_zillow_df,10))
+```
+
+## Summaries for Problem 3: 
+
+Observations and unique: 
+```{r}
+obs_n = nrow(final_zillow_df)
+distinct_zips = dplyr::n_distinct(final_zillow_df$zip_code)
+distinct_neighborhoods = dplyr::n_distinct(final_zillow_df$neighborhood)
+```
+There are 17516 observations with 149 unique zip codes and 43 distinct neighborhoods 
+
+Zips present in ZIP but missing from ZORI: 
+```{r}
+zips_missing_in_zori = zip_df %>%
+  anti_join(distinct(zori_df,zip_code), by = "zip_code")
+knitr::kable(head(zips_missing_in_zori,10))
+```
+There are 171 zip codes that appear in the ZIP data set but not in the Zillow rental price data set. This could be because zillow does not have residential areas at the specific code, meaning that there would be no set prices. For example, the 10499 zip code could be referring to a PO box address so it lacks any residential listing. Other ZIPs like 10705 may fall outside of Zillow’s defined NYC metro boundaries. 
+
+Rental Price fluctuations 
+```{r}
+
 ```
 
 
