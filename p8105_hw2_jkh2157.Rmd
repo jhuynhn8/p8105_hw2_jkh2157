@@ -15,3 +15,24 @@ library(tidyverse)
 library(knitr)
 ```
 
+## Problem 1
+
+Step 1a: Clean the data in pols-month
+
+```{r}
+pols_df=
+  read_csv("datasets/fivethirtyeight_datasets/pols-month.csv") %>% 
+  janitor::clean_names() %>% 
+  separate (mon, into = c("year","month","day"),sep="-") %>% 
+  mutate(
+    month = recode(month,`01`="Jan",`02`="Feb",`03`="Mar",`04`="Apr",`05`="May",`06`="Jun",`07`="Jul",`08`="Aug",`09`="Sep",`10`="Oct",`11`="Nov",`12`="Dec"),
+    president = case_when(
+      prez_gop == 1 ~ "gop",
+      prez_dem ==1 ~ "dem"
+    ),
+    year=as.character(year)
+  ) %>% 
+  select(year,month,president,everything(),-day,-prez_gop,-prez_dem)
+knitr::kable(head(pols_df,10))
+```
+
