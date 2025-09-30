@@ -144,3 +144,18 @@ total_cigs_gwyn = gwyn_trash_df %>%
 
 The combined Trash Wheel dataset contains **`r nrow(trash_wheels)`** observations and **`r ncol(trash_wheels)`** variables. Some key variables included the weight of trash collected, cigarette butts collected, plastic bottles, and identifier for which trash wheel the data came from. Professor Trash Wheel collected a total of **`r total_weight_prof$total_weight`** tons of trash. In June 2022, Gwynnda collected **`r total_cigs_gwyn$total_cigs`** cigarette butts.
 
+## Problem 3 
+
+Step 3a: wrangle data for Zip 
+
+```{r}
+zip_df=
+  read_csv("datasets/zillow_data/ZIP.csv") %>% 
+  janitor::clean_names() %>% 
+  select(zip_code,county,neighborhood)
+knitr::kable(head(zip_df,10))
+```
+
+
+
+
