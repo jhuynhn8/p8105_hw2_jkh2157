@@ -54,3 +54,21 @@ snp_df=
 knitr::kable(head(snp_df,10))
 ```
 
+Step 1c: tidy unemploymeny data 
+
+```{r}
+unemployement_df=
+  read_csv("datasets/fivethirtyeight_datasets/unemployment.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    col=jan:dec,
+    names_to="month",
+    values_to="unemployment") %>% 
+  mutate(
+    month=str_to_title(month),
+    year=as.character(year)) %>% 
+  select(year,month,unemployment)
+knitr::kable(head(unemployement_df,10))
+```
+
+
