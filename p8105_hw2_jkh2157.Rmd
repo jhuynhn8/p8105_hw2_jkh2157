@@ -99,4 +99,17 @@ mutate(
 knitr::kable(head(mr_trash_df,10))
 ```
 
+Step 2b: C;eaning up Professor Trash 
+
+```{r}
+prof_trash_df=
+  read_excel("datasets/trash_wheel_data.xlsx", sheet="Professor Trash Wheel", range="A2:M123") %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(dumpster)) %>% 
+  mutate(
+    identity="prof",
+    year=as.numeric(year)
+  )
+knitr::kable(head(prof_trash_df,10))
+```
 
