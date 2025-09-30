@@ -36,3 +36,21 @@ pols_df=
 knitr::kable(head(pols_df,10))
 ```
 
+Step 1b: Clean the data for snp.csv 
+
+```{r}
+snp_df=
+  read_csv("datasets/fivethirtyeight_datasets/snp.csv") %>% 
+  separate(date, into=c("month","date","year"), sep = "/") %>% 
+  mutate(
+    month = recode(month,`1`="Jan",`2`="Feb",`3`="Mar",`4`="Apr",`5`="May",`6`="Jun",`7`="Jul",`8`="Aug",`9`="Sep",`10`="Oct",`11`="Nov",`12`="Dec"),
+    year=case_when(
+      as.numeric(year)>=50 ~ paste0("19",year),
+      as.numeric(year)<50 ~ paste0("20",year)
+    )) %>% 
+  mutate(year=as.character(year)) %>% 
+  select(year,month,close) %>% 
+  arrange(year,month)
+knitr::kable(head(snp_df,10))
+```
+
