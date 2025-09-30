@@ -156,6 +156,22 @@ zip_df=
 knitr::kable(head(zip_df,10))
 ```
 
+Step 3b: Clean the ZORI data 
+
+```{r}
+zori_df=
+  read_csv("datasets/zillow_data/ZORI.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    cols=starts_with("x20"),
+    names_to="date",
+    values_to = "rent_price"
+  ) %>% 
+  mutate(
+    date=str_remove(date,"x"),
+    date=ymd(date))
+```
+
 
 
 
