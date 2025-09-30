@@ -127,4 +127,20 @@ gwyn_trash_df=
 knitr::kable(head(gwyn_trash_df,10))
 ```
 
+Step 2d: merging the data sets 
+
+```{r}
+trash_wheels = bind_rows(mr_trash_df,prof_trash_df,gwyn_trash_df)
+
+knitr::kable(head(trash_wheels,15))
+
+total_weight_prof = prof_trash_df %>%
+  summarise(total_weight = sum(weight_tons, na.rm = TRUE))
+
+total_cigs_gwyn = gwyn_trash_df %>%
+  filter(year == 2022, month == "June") %>%
+  summarise(total_cigs = sum(cigarette_butts, na.rm = TRUE))
+```
+
+The combined Trash Wheel dataset contains **`r nrow(trash_wheels)`** observations and **`r ncol(trash_wheels)`** variables. Some key variables included the weight of trash collected, cigarette butts collected, plastic bottles, and identifier for which trash wheel the data came from. Professor Trash Wheel collected a total of **`r total_weight_prof$total_weight`** tons of trash. In June 2022, Gwynnda collected **`r total_cigs_gwyn$total_cigs`** cigarette butts.
 
