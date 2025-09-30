@@ -152,7 +152,7 @@ Step 3a: wrangle data for Zip
 zip_df=
   read_csv("datasets/zillow_data/ZIP.csv") %>% 
   janitor::clean_names() %>% 
-  select(zip_code,county,neighborhood)
+  select(zip_code,county_code,county_fips,neighborhood,state_fips,file_date)
 knitr::kable(head(zip_df,10))
 ```
 
@@ -162,6 +162,7 @@ Step 3b: Clean the ZORI data
 zori_df=
   read_csv("datasets/zillow_data/ZORI.csv") %>% 
   janitor::clean_names() %>% 
+  rename(zip_code=region_name) %>% 
   pivot_longer(
     cols=starts_with("x20"),
     names_to="date",
@@ -170,7 +171,18 @@ zori_df=
   mutate(
     date=str_remove(date,"x"),
     date=ymd(date))
+knitr::kable(head(zori_df,10))
 ```
+
+Step 3c: merge the data sets using zipcode, remove redunancies, and reorganize columns names here as well 
+
+```{r}
+final_zillow_df= left_join(zori_df,zip_df,by="zip_code",relationship="many-to-many") %>% 
+  select(-state_name,-region_type,-file_date) %>% 
+  relocate(zip_code,neighborhood,county_name,city,state,metro,date,rent_price)
+knitr::kable(head(final_zillow_df,10))
+```
+
 
 
 
