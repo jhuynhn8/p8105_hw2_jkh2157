@@ -99,7 +99,7 @@ mutate(
 knitr::kable(head(mr_trash_df,10))
 ```
 
-Step 2b: C;eaning up Professor Trash 
+Step 2b: Cleaning up Professor Trash 
 
 ```{r}
 prof_trash_df=
@@ -112,4 +112,19 @@ prof_trash_df=
   )
 knitr::kable(head(prof_trash_df,10))
 ```
+
+Step 2c: Cleaning up Gwynnda data 
+
+```{r}
+gwyn_trash_df=
+  read_excel("datasets/trash_wheel_data.xlsx", sheet="Gwynnda Trash Wheel", range = "A2:L266") %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(dumpster)) %>% 
+  mutate(
+    identity="gwynnda",
+    year=as.numeric(year)
+  )
+knitr::kable(head(gwyn_trash_df,10))
+```
+
 
