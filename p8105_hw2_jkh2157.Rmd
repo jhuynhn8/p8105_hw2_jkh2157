@@ -88,7 +88,7 @@ Step 2a: Cleaning up mrTrash
 
 ```{r}
 mr_trash_df=
-  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Mr. Trash Wheel", range = "A2:N655") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Mr. Trash Wheel", range = "A2:N710") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
 mutate(
@@ -103,7 +103,7 @@ Step 2b: Cleaning up Professor Trash
 
 ```{r}
 prof_trash_df=
-  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Professor Trash Wheel", range="A2:M123") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Professor Trash Wheel", range="A2:M135") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
   mutate(
@@ -117,7 +117,7 @@ Step 2c: Cleaning up Gwynnda data
 
 ```{r}
 gwyn_trash_df=
-  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Gwynns Falls Trash Wheel", range = "A2:L266") %>% 
+  read_excel("datasets/trash_wheel_data2.xlsx", sheet="Gwynns Falls Trash Wheel", range = "A2:L352") %>% 
   janitor::clean_names() %>% 
   filter(!is.na(dumpster)) %>% 
   mutate(
@@ -168,6 +168,9 @@ zip_clean =
   select(zip,
          borough = county,
          neighborhood)
+
+knitr::kable(head(zip_clean,10))
+knitr::kable(head(zori_clean,10))
 ```
 
 Step 3B: need to make ZORI long format 
@@ -183,6 +186,7 @@ zori_long=
    date=str_remove(date,"x")) %>% 
      select(zip,date,rent) %>% 
      arrange(zip,date)
+knitr::kable(head(zori_long,10))
 ```
 
 Step 3C Part1: merging zip info due to warning error many
@@ -201,6 +205,7 @@ final_df=
   left_join(zori_long,zip_one_per_zip,by="zip") %>% 
   relocate(zip,borough,neighborhood,date,rent) %>% 
   arrange(zip,date)
+knitr::kable(head(final_df,10))
 total_observations = nrow(final_df)        # total rows
 unique_zips_final = length(unique(final_df$zip)) # 149
 unique_neighborhoods = length(unique(na.omit(zip_clean$neighborhood)))
