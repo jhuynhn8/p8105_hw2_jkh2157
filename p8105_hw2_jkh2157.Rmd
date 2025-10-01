@@ -146,64 +146,108 @@ The combined Trash Wheel dataset contains **`r nrow(trash_wheels)`** observation
 
 ## Problem 3 
 
-Step 3a: wrangle data for Zip 
+Step 3a:import and clean the data 
 
 ```{r}
-zip_df=
-  read_csv("datasets/zillow_data/ZIP.csv") %>% 
-  janitor::clean_names() %>% 
-  select(zip_code,county_code,county_fips,neighborhood,state_fips,file_date)
-knitr::kable(head(zip_df,10))
+zori_raw=
+  read_csv("datasets/zillow_data/ZORI.csv",na=c("NA",".",""), show_col_types=FALSE) %>% 
+  janitor::clean_names()
+
+zip_raw=
+  read_csv("datasets/zillow_data/ZIP.csv",na=c("NA",".",""),show_col_types = FALSE) %>% 
+  janitor::clean_names()
+
+zori_clean =
+  zori_raw |>
+  mutate(zip = as.character(region_name)) |>
+  relocate(zip)
+
+zip_clean =
+  zip_raw |>
+  mutate(zip = as.character(zip_code)) |>
+  select(zip,
+         borough = county,
+         neighborhood)
 ```
 
-Step 3b: Clean the ZORI data 
+Step 3B: need to make ZORI long format 
 
 ```{r}
-zori_df=
-  read_csv("datasets/zillow_data/ZORI.csv") %>% 
-  janitor::clean_names() %>% 
-  rename(zip_code=region_name) %>% 
+zori_long=
+  zori_clean %>% 
   pivot_longer(
-    cols=starts_with("x20"),
+    cols=x2015_01_31:x2024_08_31,
     names_to="date",
-    values_to = "rent_price"
-  ) %>% 
-  mutate(
-    date=str_remove(date,"x"),
-    date=ymd(date))
-knitr::kable(head(zori_df,10))
+    values_to="rent") %>% 
+ mutate(
+   date=str_remove(date,"x")) %>% 
+     select(zip,date,rent) %>% 
+     arrange(zip,date)
 ```
 
-Step 3c: merge the data sets using zipcode, remove redunancies, and reorganize columns names here as well 
-
+Step 3C Part1: merging zip info due to warning error many
 ```{r}
-final_zillow_df= left_join(zori_df,zip_df,by="zip_code",relationship="many-to-many") %>% 
-  select(-state_name,-region_type,-file_date) %>% 
-  relocate(zip_code,neighborhood,county_name,city,state,metro,date,rent_price)
-knitr::kable(head(final_zillow_df,10))
+zip_one_per_zip =
+  zip_clean |>
+  group_by(zip) |>
+  slice(1) |>     
+  ungroup()
+```
+Some ZIP codes span multiple neighborhoods; to avoid row inflation later on, I keep one neighborhood per ZIP (first alphabetically). This preserves correct ZIP-level counts while keeping the dataset tidy.
+
+Step 3C Part2: merge data sets 
+```{r}
+final_df=
+  left_join(zori_long,zip_one_per_zip,by="zip") %>% 
+  relocate(zip,borough,neighborhood,date,rent) %>% 
+  arrange(zip,date)
 ```
 
-## Summaries for Problem 3: 
+Step 4: looking for unique zips and unique neighborhoods 
 
-Observations and unique: 
 ```{r}
-obs_n = nrow(final_zillow_df)
-distinct_zips = dplyr::n_distinct(final_zillow_df$zip_code)
-distinct_neighborhoods = dplyr::n_distinct(final_zillow_df$neighborhood)
+unique_zips=length(unique(final_df$zip))
+unique_neighborhoods=length(unique(na.omit(zip_clean$neighborhood)))
+unique_zips
+unique_neighborhoods
 ```
-There are 17516 observations with 149 unique zip codes and 43 distinct neighborhoods 
 
-Zips present in ZIP but missing from ZORI: 
+Since multiple neighborhoods were collapsed into a single string per ZIP to keep the dataset tidy, counting neighborhoods directly from the final dataset would understate the true number. To accurately report the number of unique neighborhoods represented, I used the original ZIP code file before collapsing. I still pulled zips from the final becasue those stayed consistent. There **149 unique zips and 42 unique neighbhorhoods.** 
+
+Step 5: now looking for zips that don't show up in ZORI 
+
 ```{r}
-zips_missing_in_zori = zip_df %>%
-  anti_join(distinct(zori_df,zip_code), by = "zip_code")
-knitr::kable(head(zips_missing_in_zori,10))
+zips_in_zori = tibble(zip = unique(zori_clean$zip))
+zips_in_zip  = tibble(zip = unique(zip_clean$zip))
+
+zips_not_in_zori_tbl =
+  zip_clean |>
+  anti_join(zips_in_zori, by = "zip") |>
+  arrange(borough, zip)
+
+zips_not_in_zori_amount=nrow(zips_not_in_zori_tbl)
+zips_not_in_zori_amount
+knitr::kable(head(zips_not_in_zori_tbl, 15))
 ```
-There are 171 zip codes that appear in the ZIP data set but not in the Zillow rental price data set. This could be because zillow does not have residential areas at the specific code, meaning that there would be no set prices. For example, the 10499 zip code could be referring to a PO box address so it lacks any residential listing. Other ZIPs like 10705 may fall outside of Zillow’s defined NYC metro boundaries. 
 
-Rental Price fluctuations 
+I found that there were **171** ZIP codes that appear in the NYC ZIP file but are missing from Zori. For example, ZIP 10464 (Southeast Bronx), ZIP 10474 (Hunts Point and Mott Haven), and ZIP 11224 (Southern Brooklyn) are listed in the city ZIP file but not included in Zillow. This likely reflects areas with limited rental housing, industrial/commercial zones, or ZIP codes that are primarily PO Box–only. Zillow excludes these areas because there would not be enough info to calculate the Zori index. 
+
+Step 6:  Compare rental prices in January 2021 to prices in January 2020. Make a table that shows the 10 ZIP codes (along with the borough and neighborhood) with largest drop in price from January 2020 to 2021. 
+
 ```{r}
-
+jan_drop_tbl =
+  final_df |>
+  filter(date %in% c("2020_01_31", "2021_01_31")) |>
+  group_by(zip, borough, neighborhood) |>
+  summarise(
+    jan2020 = rent[date == "2020_01_31"],
+    jan2021 = rent[date == "2021_01_31"],
+    .groups = "drop"
+  ) |>
+  mutate(drop_2020_to_2021 = jan2021 - jan2020) |>
+  filter(!is.na(drop_2020_to_2021)) |>
+  arrange(drop_2020_to_2021)
+knitr::kable(head(jan_drop_tbl, 10))
 ```
 
 
