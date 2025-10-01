@@ -201,20 +201,14 @@ final_df=
   left_join(zori_long,zip_one_per_zip,by="zip") %>% 
   relocate(zip,borough,neighborhood,date,rent) %>% 
   arrange(zip,date)
+total_observations = nrow(final_df)        # total rows
+unique_zips_final = length(unique(final_df$zip)) # 149
+unique_neighborhoods = length(unique(na.omit(zip_clean$neighborhood)))
 ```
 
-Step 4: looking for unique zips and unique neighborhoods 
+The final data set has **17284 observations, 149 unique zips and 42 unique neighbhorhoods.** 
 
-```{r}
-unique_zips=length(unique(final_df$zip))
-unique_neighborhoods=length(unique(na.omit(zip_clean$neighborhood)))
-unique_zips
-unique_neighborhoods
-```
-
-Since multiple neighborhoods were collapsed into a single string per ZIP to keep the dataset tidy, counting neighborhoods directly from the final dataset would understate the true number. To accurately report the number of unique neighborhoods represented, I used the original ZIP code file before collapsing. I still pulled zips from the final becasue those stayed consistent. There **149 unique zips and 42 unique neighbhorhoods.** 
-
-Step 5: now looking for zips that don't show up in ZORI 
+Step 4: now looking for zips that don't show up in ZORI 
 
 ```{r}
 zips_in_zori = tibble(zip = unique(zori_clean$zip))
@@ -232,7 +226,7 @@ knitr::kable(head(zips_not_in_zori_tbl, 15))
 
 I found that there were **171** ZIP codes that appear in the NYC ZIP file but are missing from Zori. For example, ZIP 10464 (Southeast Bronx), ZIP 10474 (Hunts Point and Mott Haven), and ZIP 11224 (Southern Brooklyn) are listed in the city ZIP file but not included in Zillow. This likely reflects areas with limited rental housing, industrial/commercial zones, or ZIP codes that are primarily PO Box–only. Zillow excludes these areas because there would not be enough info to calculate the Zori index. 
 
-Step 6:  Compare rental prices in January 2021 to prices in January 2020. Make a table that shows the 10 ZIP codes (along with the borough and neighborhood) with largest drop in price from January 2020 to 2021. 
+Step 5:  Compare rental prices in January 2021 to prices in January 2020. Make a table that shows the 10 ZIP codes (along with the borough and neighborhood) with largest drop in price from January 2020 to 2021. 
 
 ```{r}
 jan_drop_tbl =
